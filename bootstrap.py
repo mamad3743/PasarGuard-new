@@ -4,6 +4,7 @@ import json, os, sys, threading, time, urllib.error, urllib.parse, urllib.reques
 BASE = "http://127.0.0.1:8000"
 DATA = os.getenv("JINX_DATA", "/var/lib/pasarguard")
 DOMAIN = (os.getenv("PUBLIC_DOMAIN") or os.getenv("RAILWAY_PUBLIC_DOMAIN") or "").strip()
+CLEAN_IPS = [x for x in (os.getenv("CLEAN_IPS") or "").replace(" ", ",").replace(";", ",").split(",") if x.strip()]   # optional clean Cloudflare IPs, used as the config address (SNI and Host stay on DOMAIN)
 import subprocess
 USER, PASS = "admin", "admin"          # first-boot login; change it later in the panel or with the owner key
 RESELLER_USER, RESELLER_PASS, RESELLER_GB = "reseller", "reseller", 50
@@ -395,7 +396,7 @@ def ensure_hosts():
             req("DELETE", f"/api/host/{h['id']}")
     changed = 0
     for idx, (tag, proto, port, net, path, fp, name, grp) in enumerate(INBOUNDS):
-        body = {"remark": f"{name} | {TITLE}", "allowinsecure": False, "address": [DOMAIN], "inbound_tag": tag,
+        body = {"remark": f"{name} | {TITLE}", "allowinsecure": False, "address": CLEAN_IPS or [DOMAIN], "inbound_tag": tag,
                 "port": 443, "sni": [DOMAIN], "host": [DOMAIN], "path": path + EARLY_DATA, "security": "tls",
                 "alpn": ["http/1.1"], "fingerprint": fp, "priority": idx + 1, "is_disabled": False}
         mine = [h for h in existing if h.get("inbound_tag") == tag]
@@ -407,7 +408,7 @@ def ensure_hosts():
                 req("DELETE", f"/api/host/{extra['id']}")
         else:
             must("POST", "/api/host/", body); changed += 1
-    if changed or not QUIET.get("hosts"): log(f"{len(INBOUNDS)} hosts ready on", DOMAIN); QUIET["hosts"] = True
+    if changed or not QUIET.get("hosts"): log(f"{len(INBOUNDS)} hosts ready on", DOMAIN, ("via clean IPs: " + ", ".join(CLEAN_IPS)) if CLEAN_IPS else ""); QUIET["hosts"] = True
 
 def ensure_settings():
     if not DOMAIN: return

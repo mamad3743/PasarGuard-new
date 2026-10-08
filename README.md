@@ -599,6 +599,7 @@ flowchart LR
 | `CONFIG_TITLE` | `Vortex` | متنی که بعد از اسم هر کانفیگ دیده میشه |
 | `SUBSCRIPTION_PATH` | `sub` | مسیر لینک اشتراک |
 | `PUBLIC_DOMAIN` | دامنه‌ی Railway | فقط برای دامنه‌ی شخصی یا Cloudflare |
+| `CLEAN_IPS` | خالی | آی‌پی تمیز Cloudflare به‌جای آدرس سرور توی کانفیگ‌ها، با کاما جدا کن. فقط وقتی دامنه‌ات پشت Cloudflare باشه (ابر نارنجی، SSL روی Full) |
 | `DEMO_RESELLER` | `on` | با `off` نماینده‌ی نمونه ساخته نمیشه |
 
 <br>

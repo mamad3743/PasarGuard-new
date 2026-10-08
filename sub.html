@@ -224,12 +224,24 @@ html[data-theme=light] h1{background:linear-gradient(95deg,#0b0c0f 20%,#2563eb 7
 .foot b{background:linear-gradient(95deg,#93c5fd,#c4b5fd);-webkit-background-clip:text;background-clip:text;color:transparent}
 .rw b{font-feature-settings:"tnum"}
 </style>
-<style id="wow3">
-.ring svg.dsh{position:absolute;inset:-12px;width:calc(100% + 24px);height:calc(100% + 24px);transform:none;pointer-events:none;overflow:visible;opacity:.85}
-.ring .dsh circle{transform-box:fill-box;transform-origin:center}
-.ring .d1{animation:rot 22s linear infinite}
-.ring .d2{animation:rot 16s linear infinite reverse}
+<style id="wow4">
+.ring svg.dsh{position:absolute;inset:-12px;width:calc(100% + 24px);height:calc(100% + 24px);transform:none;pointer-events:none;overflow:visible;opacity:.9}
+.ring .orb{transform-box:view-box;transform-origin:50% 50%;animation:rot 14s linear infinite}
+.ring .sat{filter:drop-shadow(0 0 6px currentColor) drop-shadow(0 0 12px currentColor)}
+.ring::after{content:"";position:absolute;inset:-3px;border-radius:50%;pointer-events:none;background:repeating-conic-gradient(from -1deg,var(--sc) 0 1.6deg,transparent 1.6deg 6deg);-webkit-mask:radial-gradient(closest-side,transparent 90%,#000 91%,#000 100%);mask:radial-gradient(closest-side,transparent 90%,#000 91%,#000 100%);opacity:.28}
+.bar{height:6px;border-radius:6px;background:rgba(255,255,255,.09);overflow:hidden;margin-top:3px}
+.bar i{display:block;height:100%;width:0;border-radius:6px;position:relative;overflow:hidden;background:linear-gradient(90deg,var(--sc),color-mix(in srgb,var(--sc) 50%,#fff));box-shadow:0 0 14px var(--sc);transition:width 1.5s cubic-bezier(.2,.8,.2,1)}
+.bar i::after{content:"";position:absolute;inset:0;background:linear-gradient(100deg,transparent 30%,rgba(255,255,255,.55),transparent 70%);transform:translateX(-120%);animation:bs 3.2s ease-in-out infinite}
+.bar i.u{opacity:.45;background:repeating-linear-gradient(115deg,var(--sc) 0 8px,transparent 8px 16px);box-shadow:none}
+@keyframes bs{60%,100%{transform:translateX(120%)}}
+html[data-theme] h1{background-size:230% 100%;animation:hs 9s ease-in-out infinite alternate}
+@keyframes hs{to{background-position:100% 0}}
+.stt span{letter-spacing:.01em}
+.st .sth .lab{letter-spacing:.02em}
+.st{box-shadow:0 18px 44px -26px var(--sc),inset 0 1px 0 rgba(255,255,255,.07)}
+.rw{padding-bottom:9px;border-bottom:1px dashed rgba(255,255,255,.07)}.rw.g{border-bottom:0;padding-bottom:0}
 </style>
+
 
 
 
@@ -290,12 +302,13 @@ html[data-theme=light] h1{background:linear-gradient(95deg,#0b0c0f 20%,#2563eb 7
         <div class="ein"><b data-t="expIn"></b><span class="lab" id="leftD"></span></div>
       </div>
       <div class="stb">
-        <div class="ring"><svg class="dsh" viewBox="0 0 128 128" aria-hidden="true"><circle class="d1" cx="64" cy="64" r="61" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-dasharray="16 7 5 7"/><circle class="d2" cx="64" cy="64" r="55.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-dasharray="9 8 18 8"/></svg><svg viewBox="0 0 100 100"><circle class="tk" cx="50" cy="50" r="40" fill="none" stroke-width="8"/><circle class="br" id="ringB" cx="50" cy="50" r="40" fill="none" stroke-width="8"/></svg>
+        <div class="ring"><svg class="dsh" viewBox="0 0 128 128" aria-hidden="true"><g class="orb"><circle cx="64" cy="64" r="59" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-dasharray="14 8 4 8"/><circle class="sat" cx="64" cy="5" r="3.6" fill="currentColor"/></g></svg><svg viewBox="0 0 100 100"><circle class="tk" cx="50" cy="50" r="40" fill="none" stroke-width="8"/><circle class="br" id="ringB" cx="50" cy="50" r="40" fill="none" stroke-width="8"/></svg>
           <div class="mid"><div><b id="pct" class="ltr">0%</b><small id="pctL"></small></div></div></div>
         <div class="rows">
           <div class="rw"><span data-t="sUsed"></span><b id="vU" class="ltr"></b></div>
           <div class="rw"><span data-t="sAll"></span><b id="vA" class="ltr"></b></div>
           <div class="rw g"><span data-t="sLeft"></span><b id="vL" class="ltr"></b></div>
+          <div class="bar"><i id="barI"></i></div>
         </div>
       </div>
     </div>
@@ -674,7 +687,7 @@ function runPing(){if(PING.busy)return;PING.busy=true;$("pingB").classList.add("
  one().then(function(){},function(){}).then(step)}
 
 /* ---------- usage ring ---------- */
-function ring(){var p=unl?0:pct;$("ringB").style.strokeDashoffset=(251.33*(1-p/100)).toFixed(2);
+function ring(){var p=unl?0:pct;$("barI").style.width=(unl?100:Math.max(3,p))+"%";if(unl)$("barI").className="u";$("ringB").style.strokeDashoffset=(251.33*(1-p/100)).toFixed(2);
  if(unl){$("pct").textContent="∞";return}
  if(reduce){$("pct").textContent=num(p,0)+"%";return}
  var t0=performance.now();(function st(t){var k=Math.min(1,(t-t0)/1400);k=1-Math.pow(1-k,3);$("pct").textContent=num(p*k,0)+"%";if(k<1)requestAnimationFrame(st)})(t0)}
