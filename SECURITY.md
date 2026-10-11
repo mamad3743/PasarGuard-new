@@ -6,7 +6,7 @@
 - The demo reseller `reseller / reseller` is created once. Change its password or delete it; it is never re-created. Set `DEMO_RESELLER=off` to skip it.
 - The "Admins" menu is visible to the owner only.
 - Settings > Change password needs the current username and password, is checked by the panel itself, verified after saving, and locked for 10 minutes after 5 wrong tries (per visitor, using the real IP behind Railway).
-- Groups, hosts, cores, nodes and admin roles are read-only from outside (nginx blocks every change), so nobody can delete them from the dashboard or the API.
+- Groups, cores, nodes and admin roles are read-only from outside (nginx blocks every change), so nobody can delete them from the dashboard or the API. Hosts can be edited and added by the owner (the panel itself still requires the owner/sudo account), but DELETE on hosts is blocked.
 - The owner key is made by Super JinX itself: one use, 5 minutes, kept only in memory, 5 wrong tries lock it for 10 minutes. It works even with simple passwords (PasarGuard's own owner form rejects them).
 - The internal node API key and TLS certificate are generated on first boot and stored on the volume.
 - The subscription page file is checked every 3 seconds and restored from the original copy inside the image if it is missing or changed.

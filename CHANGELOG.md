@@ -1,5 +1,9 @@
 # Changelog
 
+## v6.1.5
+- Config names are now written in bold Unicode font (𝗔𝗽𝗲𝘅 | 𝗡𝗟) and the default title after each name is NL instead of Vortex (CONFIG_TITLE). Existing hosts are renamed automatically on the next boot; the CDN FASTLY host is owner-edited and is not touched
+- Fix: editing a host in the dashboard (Hosts > Edit) failed with a raw "403 Forbidden nginx" error because nginx blocked every non-GET request on hosts. Hosts can now be edited (PUT) and added (POST) by the panel owner; DELETE stays blocked. Groups, cores, nodes and roles are still read-only from outside
+
 ## v6.1.4
 - New optional config 🌐 CDN FASTLY (VLESS + WebSocket on port 10006, path /fastly/): created automatically. Its address, SNI, Host and name are edited inside the panel (Hosts) and are never overwritten. Existing panels keep their paths, only the new one is generated
 - New optional CLEAN_IPS variable: clean Cloudflare IPs as the config address. Without it, an address typed in the panel (Hosts) is kept on every boot; hosts still on the panel domain keep following it

@@ -468,7 +468,7 @@ flowchart LR
 اسم کانفیگ‌ها توی اپ کاربر با فونت مخصوص دیده میشه:
 
 ```text
-👑 Apex | Vortex
+👑 𝗔𝗽𝗲𝘅 | 𝗡𝗟
 ⚡ 𝗙𝗹𝗮𝘀𝗵 | جینکس | 𝙎𝙪𝙥𝙚𝙧 𝗝𝗶𝗻𝗫
 🔥 𝗙𝗶𝗿𝗲 | جینکس | 𝙎𝙪𝙥𝙚𝙧 𝗝𝗶𝗻𝗫
 💎 𝗗𝗶𝗮𝗺𝗼𝗻𝗱 | جینکس | 𝙎𝙪𝙥𝙚𝙧 𝗝𝗶𝗻𝗫
@@ -596,7 +596,7 @@ flowchart LR
 
 | متغیر | پیش‌فرض | کاربرد |
 |---|---|---|
-| `CONFIG_TITLE` | `Vortex` | متنی که بعد از اسم هر کانفیگ دیده میشه |
+| `CONFIG_TITLE` | `NL` | متنی که بعد از اسم هر کانفیگ دیده میشه |
 | `SUBSCRIPTION_PATH` | `sub` | مسیر لینک اشتراک |
 | `PUBLIC_DOMAIN` | دامنه‌ی Railway | فقط برای دامنه‌ی شخصی یا Cloudflare |
 | `CLEAN_IPS` | خالی | اختیاری: آی‌پی تمیز Cloudflare برای آدرس همه‌ی کانفیگ‌ها، با کاما جدا کن. اگه نذاری، آدرس هر هاست رو می‌تونی از داخل پنل (Hosts) عوض کنی و بعد از ری‌استارت دست نمی‌خوره. فقط وقتی دامنه‌ات پشت Cloudflare باشه (ابر نارنجی، SSL روی Full) |
@@ -696,7 +696,7 @@ flowchart LR
 - **Configs:** 5 configs (VLESS / Trojan / VMess over WebSocket and HTTPUpgrade, TLS 443, early data) in 2 groups: *Pro* (1 best config) and *JinX* (4 different configs)
 - **Subscription page:** JINX PASS card, Persian and English, live ping, built-in QR, one-tap import to V2Box, v2rayNG, Hiddify, Streisand, Happ and NekoBox
 - **Self-healing:** a support bot fixes the core, groups, hosts and templates; the sub-guard checks subscription links every 3 seconds and repairs them in seconds
-- **Locked:** groups, hosts, cores, nodes and roles can be read but never deleted from outside
+- **Locked:** groups, cores, nodes and roles can be read but never deleted or changed from outside; hosts can be edited/added by the owner but never deleted
 
 </details>
 

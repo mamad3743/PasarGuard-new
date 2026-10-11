@@ -48,7 +48,20 @@ http {
       sub_filter '</head>' '<script src="/jinx-ui.js" defer></script></head>';
     }
 
-    # ---- protected: groups, hosts, cores, nodes and roles can be READ from the dashboard but never
+    # ---- hosts: the owner can EDIT (PUT) and ADD (POST) hosts from the dashboard (address, SNI, Host, name, port...),
+    #      but DELETE stays blocked. This block must stay ABOVE the protected block below: nginx uses the first matching regex ----
+    location ~ ^/api/hosts?(/|$) {
+      limit_except GET HEAD PUT POST { deny all; }
+      proxy_pass http://panel;
+      proxy_http_version 1.1;
+      proxy_set_header Host $host;
+      proxy_set_header X-Real-IP $remote_addr;
+      proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+      proxy_set_header X-Forwarded-Proto https;
+      proxy_set_header Connection "";
+    }
+
+    # ---- protected: groups, cores, nodes and roles can be READ from the dashboard but never
     #      deleted or changed from outside (only the built-in setup inside the server can change them) ----
     location ~ ^/api/(groups?|hosts?|cores?|nodes?|admin-roles?)(/|$)(?!.*bulk) {
       limit_except GET HEAD { deny all; }   # bulk actions on users (add/remove group) still work

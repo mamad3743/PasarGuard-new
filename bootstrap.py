@@ -14,7 +14,18 @@ CORE_NAME, NODE_NAME = "JinX-Core", "JinX-Core"
 PRO_GROUP, STD_GROUP = "Apex Pro", "Orbit"       # 1 premium config / 4 different configs
 LEGACY_GROUPS = {"pro": ("جینکس پرو",), "std": ("𝗝𝗶𝗻𝗫",)}   # older names, renamed in place so users keep their group
 OLD_GROUP = "jinx-all"                         # from earlier versions, renamed to STD_GROUP (keeps its users)
-TITLE = os.getenv("CONFIG_TITLE", "Vortex")   # shown after every config name
+TITLE = os.getenv("CONFIG_TITLE", "NL")   # shown after every config name
+
+def _fancy(s):
+    """plain A-Z / a-z / 0-9 -> Unicode bold sans (like 𝗡𝗟); emoji, spaces and other characters stay as they are"""
+    out = []
+    for ch in s:
+        o = ord(ch)
+        if 65 <= o <= 90: out.append(chr(0x1D5D4 + o - 65))
+        elif 97 <= o <= 122: out.append(chr(0x1D5EE + o - 97))
+        elif 48 <= o <= 57: out.append(chr(0x1D7EC + o - 48))
+        else: out.append(ch)
+    return "".join(out)
 GB = 1024 ** 3
 DAY = 86400
 
@@ -404,7 +415,7 @@ def ensure_hosts():
     changed = 0
     for idx, (tag, proto, port, net, path, fp, name, grp) in enumerate(INBOUNDS):
         cdn = tag == "JX-VLESS-CDN"   # this host belongs to the panel owner: created once, then edited in the panel (address, SNI, Host, name...) and never overwritten
-        body = {"remark": f"{name} | {TITLE}", "allowinsecure": False, "address": [FASTLY_ADDRESS or FASTLY_DOMAIN or DOMAIN] if cdn else (CLEAN_IPS or [DOMAIN]), "inbound_tag": tag,
+        body = {"remark": f"{_fancy(name)} | {_fancy(TITLE)}", "allowinsecure": False, "address": [FASTLY_ADDRESS or FASTLY_DOMAIN or DOMAIN] if cdn else (CLEAN_IPS or [DOMAIN]), "inbound_tag": tag,
                 "port": 443, "sni": [(FASTLY_DOMAIN or DOMAIN) if cdn else DOMAIN], "host": [(FASTLY_DOMAIN or DOMAIN) if cdn else DOMAIN], "path": path + EARLY_DATA, "security": "tls",
                 "alpn": ["http/1.1"], "fingerprint": fp, "priority": idx + 1, "is_disabled": False}
         mine = [h for h in existing if h.get("inbound_tag") == tag]
