@@ -4,6 +4,8 @@ import json, os, sys, threading, time, urllib.error, urllib.parse, urllib.reques
 BASE = "http://127.0.0.1:8000"
 DATA = os.getenv("JINX_DATA", "/var/lib/pasarguard")
 DOMAIN = (os.getenv("PUBLIC_DOMAIN") or os.getenv("RAILWAY_PUBLIC_DOMAIN") or "").strip()
+FASTLY_DOMAIN = (os.getenv("FASTLY_DOMAIN") or "").strip().lower()      # optional start value for the CDN FASTLY host; afterwards it is edited in the panel (Hosts)
+FASTLY_ADDRESS = (os.getenv("FASTLY_ADDRESS") or "").strip()            # optional start value for its address
 CLEAN_IPS = [x for x in (os.getenv("CLEAN_IPS") or "").replace(" ", ",").replace(";", ",").split(",") if x.strip()]   # optional clean Cloudflare IPs, used as the config address (SNI and Host stay on DOMAIN)
 import subprocess
 USER, PASS = "admin", "admin"          # first-boot login; change it later in the panel or with the owner key
@@ -28,6 +30,7 @@ INBOUNDS = [
     ("JX-TROJAN-WS",  "trojan", 10003, "ws",          "/live/",   "safari",  "🔥 Blaze",   "std"),
     ("JX-VMESS-WS",   "vmess",  10004, "ws",          "/gw/",    "edge",    "💎 Prism",   "std"),
     ("JX-VLESS-HU",   "vless",  10005, "httpupgrade", "/cdn/",    "ios",     "🌙 Lunar",   "std"),
+    ("JX-VLESS-CDN",  "vless",  10006, "ws",          "/fastly/", "chrome",  "🌐 CDN FASTLY", "std"),
 ]
 EARLY_DATA = "?ed=2560"
 # real paths are unique per install (genpaths.py writes them to the volume before nginx starts)
@@ -386,6 +389,10 @@ def _norm(v):
     if isinstance(v, bool): return v
     return [str(v).lower()] if isinstance(v, str) and "," not in v else str(v).lower()
 
+def _auto_addr(v):  # True when the address is empty or is the panel's own domain: such hosts follow DOMAIN; anything else was set by the owner in the panel
+    vals = [str(x) for x in (v or [])]
+    return not vals or all(x == DOMAIN or x.endswith(".up.railway.app") for x in vals)
+
 def ensure_hosts():
     if not DOMAIN:
         log("WARNING: no public domain yet (Settings > Networking > Generate Domain), hosts skipped"); return
@@ -396,15 +403,18 @@ def ensure_hosts():
             req("DELETE", f"/api/host/{h['id']}")
     changed = 0
     for idx, (tag, proto, port, net, path, fp, name, grp) in enumerate(INBOUNDS):
-        body = {"remark": f"{name} | {TITLE}", "allowinsecure": False, "address": CLEAN_IPS or [DOMAIN], "inbound_tag": tag,
-                "port": 443, "sni": [DOMAIN], "host": [DOMAIN], "path": path + EARLY_DATA, "security": "tls",
+        cdn = tag == "JX-VLESS-CDN"   # this host belongs to the panel owner: created once, then edited in the panel (address, SNI, Host, name...) and never overwritten
+        body = {"remark": f"{name} | {TITLE}", "allowinsecure": False, "address": [FASTLY_ADDRESS or FASTLY_DOMAIN or DOMAIN] if cdn else (CLEAN_IPS or [DOMAIN]), "inbound_tag": tag,
+                "port": 443, "sni": [(FASTLY_DOMAIN or DOMAIN) if cdn else DOMAIN], "host": [(FASTLY_DOMAIN or DOMAIN) if cdn else DOMAIN], "path": path + EARLY_DATA, "security": "tls",
                 "alpn": ["http/1.1"], "fingerprint": fp, "priority": idx + 1, "is_disabled": False}
         mine = [h for h in existing if h.get("inbound_tag") == tag]
         if mine:
             cur = mine[0]
-            if any(_norm(cur.get(k)) != _norm(v) for k, v in body.items()):
-                must("PUT", f"/api/host/{cur['id']}", {**body, "id": cur["id"]}); changed += 1
-            for extra in mine[1:]:  # remove auto-created duplicates
+            own = (not cdn) and not CLEAN_IPS and bool(cur.get("address")) and not _auto_addr(cur.get("address"))   # owner typed an address in the panel: keep it
+            keep = {"path": body["path"]} if cdn else {k: v for k, v in body.items() if not (own and k == "address")}   # CDN host: only the path must match nginx, the rest is the owner's
+            if any(_norm(cur.get(k)) != _norm(v) for k, v in keep.items()):
+                must("PUT", f"/api/host/{cur['id']}", {**body, **({k: cur[k] for k in body if k in cur} if cdn else {}), **({"address": cur["address"]} if own else {}), **keep, "id": cur["id"]}); changed += 1
+            for extra in ([] if cdn else mine[1:]):  # remove auto-created duplicates (not for CDN: extra CDN hosts are allowed)
                 req("DELETE", f"/api/host/{extra['id']}")
         else:
             must("POST", "/api/host/", body); changed += 1

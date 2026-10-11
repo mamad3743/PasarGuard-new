@@ -12,6 +12,7 @@
   "used": ((user.used_traffic or 0)|int),
   "limit": ((user.data_limit or 0)|int),
   "expire": (((user.expire.timestamp()|int) if user.expire.timestamp is defined else (user.expire|int)) if user.expire else 0),
+  "online": (((user.online_at.timestamp()|int) if user.online_at.timestamp is defined else 0) if (user.online_at is defined and user.online_at) else 0),
   "links": (links or []),
   "announce": announce or ""
 } | tojson }}</script>
@@ -241,6 +242,26 @@ html[data-theme] h1{background-size:230% 100%;animation:hs 9s ease-in-out infini
 .st{box-shadow:0 18px 44px -26px var(--sc),inset 0 1px 0 rgba(255,255,255,.07)}
 .rw{padding-bottom:9px;border-bottom:1px dashed rgba(255,255,255,.07)}.rw.g{border-bottom:0;padding-bottom:0}
 </style>
+<style id="wow5">
+body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:-1;opacity:.07;mix-blend-mode:overlay;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>")}
+.cur{position:fixed;left:0;top:0;width:560px;height:560px;margin:-280px 0 0 -280px;border-radius:50%;pointer-events:none;z-index:-1;background:radial-gradient(circle,rgba(99,132,255,.17),transparent 66%);transform:translate3d(-999px,-999px,0);will-change:transform}
+html[data-theme=light] .cur{background:radial-gradient(circle,rgba(59,130,246,.14),transparent 66%)}
+.spark{width:100%;height:26px;margin-top:9px;overflow:visible}
+.cd{display:block;margin-top:5px;font:600 12px ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;color:var(--mut);letter-spacing:.02em}
+.cd:empty{display:none}
+.foot::before{content:"";display:block;height:1px;margin:0 auto 12px;max-width:260px;background:linear-gradient(90deg,transparent,rgba(125,165,255,.55),transparent)}
+.ib:active{transform:scale(.92) rotate(-8deg)}
+.stt i{box-shadow:0 0 12px currentColor}
+.cf .nm b{background:linear-gradient(90deg,var(--fg),color-mix(in srgb,var(--fg) 70%,var(--ac)));-webkit-background-clip:text;background-clip:text;color:transparent}
+.empty{border:1px dashed var(--bd);border-radius:12px}
+</style>
+<style id="wow6">
+.seen{display:flex;align-items:center;gap:7px;margin-top:7px;font-size:11.5px;color:var(--mut)}
+.seen::before{content:"";width:7px;height:7px;flex:none;border-radius:50%;background:currentColor;opacity:.55}
+.seen.on{color:var(--ok)}.seen.on::before{opacity:1;animation:pu 2s infinite}
+</style>
+
+
 
 
 
@@ -273,6 +294,7 @@ html[data-theme] h1{background-size:230% 100%;animation:hs 9s ease-in-out infini
 <symbol id="p-flame" viewBox="0 0 24 24"><path d="M12 2c1 4 5 5.5 5 11a5 5 0 0 1-10 0c0-2.5 1.5-4 2.5-5 .3 2 1.2 3 2 3.2C11 8 11 5 12 2z" fill="currentColor"/></symbol>
 <symbol id="p-gem" viewBox="0 0 24 24"><path d="M6 3h12l4 6-10 12L2 9z" fill="currentColor" opacity=".9"/><path d="M2 9h20M9 3l3 18 3-18" fill="none" stroke="rgba(0,0,0,.25)" stroke-width="1.2"/></symbol>
 <symbol id="p-moon" viewBox="0 0 24 24"><path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a7 7 0 0 0 10.5 10.5z" fill="currentColor"/></symbol>
+<symbol id="p-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><path d="M3 12h18M12 3c3 3.2 3 14.8 0 18M12 3c-3 3.2-3 14.8 0 18" fill="none" stroke="currentColor" stroke-width="1.8"/></symbol>
 <symbol id="p-node" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4" fill="currentColor"/><circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-width="2" opacity=".5"/></symbol>
 </defs></svg>
 
@@ -313,9 +335,9 @@ html[data-theme] h1{background-size:230% 100%;animation:hs 9s ease-in-out infini
       </div>
     </div>
     <div class="side">
-      <div class="card sc"><div class="lab" data-t="exp"></div><b class="v d" id="expD"></b></div>
-      <div class="card sc"><div class="lab" data-t="pingT"></div><div class="pr"><b class="v ltr" id="pms">--<small>ms</small></b></div><span class="lab" id="pq"></span></div>
-      <div class="card sc"><div class="lab" data-t="cfgT"></div><b class="v ltr" id="cfgC">0</b></div>
+      <div class="card sc"><div class="lab" data-t="exp"></div><b class="v d" id="expD"></b><span class="cd ltr" id="cd"></span></div>
+      <div class="card sc"><div class="lab" data-t="pingT"></div><div class="pr"><b class="v ltr" id="pms">--<small>ms</small></b></div><span class="lab" id="pq"></span><svg id="spark" class="spark ltr" viewBox="0 0 100 26" preserveAspectRatio="none" aria-hidden="true"></svg></div>
+      <div class="card sc"><div class="lab" data-t="cfgT"></div><b class="v ltr" id="cfgC">0</b><span class="seen" id="seen"></span></div>
     </div>
   </section>
 
@@ -552,7 +574,7 @@ var NL=String.fromCharCode(10);
 var T={
  fa:{title:"داشبورد کاربری",stLbl:"وضعیت حساب",expIn:"منقضی می‌شود در",online:"آنلاین",offline:"قطع",exp:"تاریخ انقضا",useT:"مصرف حجم",used:"مصرف شده",sUsed:"ترافیک مصرفی",sLeft:"باقی‌مانده",sAll:"حد کل",
   pingT:"پینگ تا سرور",subT:"لینک اشتراک",copy:"کپی",save:"ذخیره عکس",close:"بستن",qr:"QR کد",all:"کپی همه",appsT:"اتصال با یک لمس",rec:"پیشنهادی",
-  cfgT:"کانفیگ‌ها",cfgH:"لینک‌های پیکربندی",cfgN:" کانفیگ",helpT:"آموزش اتصال",tgT:"کانال تلگرام",supT:"پشتیبانی و تمدید",copied:"کپی شد",copiedAll:"همه کانفیگ‌ها کپی شد",
+  cfgT:"کانفیگ‌ها",seenNow:"همین الان وصله",seenNever:"هنوز وصل نشده",seenLbl:"آخرین اتصال: ",cfgH:"لینک‌های پیکربندی",cfgN:" کانفیگ",helpT:"آموزش اتصال",tgT:"کانال تلگرام",supT:"پشتیبانی و تمدید",copied:"کپی شد",copiedAll:"همه کانفیگ‌ها کپی شد",
   copyFail:"کپی نشد، دستی کپی کن",saved:"عکس QR ذخیره شد",unl:"نامحدود",unlS:"حجم نامحدود",day:" روز",hr:" ساعت",none:"ندارد",
   active:"فعال",on_hold:"منتظر اولین اتصال",soon:"رو به اتمام",expired:"منقضی",limited:"حجم تمام",disabled:"غیرفعال",quick:"اتصال سریع با ",
   q:["عالی","خیلی خوب","خوب","معمولی","ضعیف"],testing:"در حال تست...",noResp:"بدون پاسخ، دوباره بزن",
@@ -564,7 +586,7 @@ var T={
      ["کانفیگ وصل نمیشه؟","اول اشتراک رو توی اپ آپدیت کن. اگه درست نشد، یه کانفیگ دیگه از لیست رو امتحان کن یا به پشتیبانی تلگرام پیام بده."]]},
  en:{title:"User Dashboard",stLbl:"Account Status",expIn:"Expires in",online:"Online",offline:"Offline",exp:"Expiry Date",useT:"Data usage",used:"Used",sUsed:"Used Traffic",sLeft:"Remaining",sAll:"Total Limit",
   pingT:"Ping to server",subT:"Subscription link",copy:"Copy",save:"Save image",close:"Close",qr:"QR code",all:"Copy all",appsT:"One-tap connect",rec:"Best",
-  cfgT:"Configs",cfgH:"Configuration Links",cfgN:" configs",helpT:"How to connect",tgT:"Telegram channel",supT:"Support and renewal",copied:"Copied",copiedAll:"All configs copied",
+  cfgT:"Configs",seenNow:"Connected now",seenNever:"Never connected",seenLbl:"Last seen: ",cfgH:"Configuration Links",cfgN:" configs",helpT:"How to connect",tgT:"Telegram channel",supT:"Support and renewal",copied:"Copied",copiedAll:"All configs copied",
   copyFail:"Could not copy, copy it by hand",saved:"QR image saved",unl:"Unlimited",unlS:"Unlimited",day:" days",hr:" hours",none:"None",
   active:"Active",on_hold:"Waiting for first use",soon:"Ending soon",expired:"Expired",limited:"Data used up",disabled:"Disabled",quick:"Quick connect with ",
   q:["Excellent","Very good","Good","Fair","Weak"],testing:"Testing...",noResp:"No answer, tap refresh",
@@ -585,7 +607,7 @@ function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){retur
 var reduce=!!(window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches);
 
 /* ---------- data ---------- */
-var used=Math.max(0,+D.used||0),limit=Math.max(0,+D.limit||0),expire=+D.expire||0;
+var online=+D.online||0,used=Math.max(0,+D.used||0),limit=Math.max(0,+D.limit||0),expire=+D.expire||0;
 if(expire>1e12)expire=Math.floor(expire/1000);
 var unl=!limit,status=String(D.status||"active").toLowerCase().replace(/^userstatus\./,"");
 var pct=unl?0:Math.min(100,used/limit*100);
@@ -613,6 +635,7 @@ function parse(l){
  else if(/flash|pulse/.test(plain)){ic="p-bolt";ac="#38bdf8"}
  else if(/fire|blaze/.test(plain)){ic="p-flame";ac="#fb7185"}
  else if(/diamond|prism/.test(plain)){ic="p-gem";ac="#a78bfa"}
+ else if(/fastly|cdn/.test(plain)){ic="p-globe";ac="#ff4d52"}
  else if(/night|lunar/.test(plain)){ic="p-moon";ac="#818cf8"}
  return {name:name,proto:P,tags:tags,ic:ic,ac:ac,pro:pro};
 }
@@ -663,6 +686,9 @@ function render(){
  else if(!unl&&pct>=85){w.className="note warn";ws.textContent=l.wData.replace("{n}",num(pct,0))}
  if(D.announce){$("ann").className="note info";$("ann").querySelector("span").textContent=String(D.announce)}
  $("apps").innerHTML=APPS.map(function(a){var r=a[0]===REC;return '<a class="app'+(r?" rec":"")+'" href="'+esc(appUrl(a[0]))+'">'+(r?'<span class="tag">'+esc(l.rec)+"</span>":"")+'<span class="ai" style="background:linear-gradient(140deg,'+a[1]+","+a[2]+')">'+a[3]+"</span>"+a[0]+"</a>"}).join("");
+ var se=$("seen");if(!online){se.className="seen";se.textContent=l.seenNever}else{var ago=Date.now()/1000-online;
+  if(ago<180){se.className="seen on";se.textContent=l.seenNow}else{se.className="seen";var rf=null;try{rf=new Intl.RelativeTimeFormat(lang==="fa"?"fa":"en",{numeric:"auto"})}catch(e){}
+   var u=ago<3600?["minute",Math.round(ago/60)]:ago<86400?["hour",Math.round(ago/3600)]:["day",Math.round(ago/86400)];se.textContent=l.seenLbl+(rf?rf.format(-u[1],u[0]):u[1]+" "+u[0])}}
  $("cfgN").textContent=CFG.length+l.cfgN;$("cfgC").textContent=CFG.length;
  if(!CFG.length){$("cfgs").innerHTML='<div class="empty">'+esc(l.empty)+"</div>";$("cpAll").classList.add("hide")}
  else $("cfgs").innerHTML=CFG.map(function(c,i){return '<div class="cf'+(c.pro?" pro":"")+'" style="--ac:'+c.ac+'"><span class="bdg">'+esc(c.proto)+'</span><span class="ix"><svg width="16" height="16"><use href="#'+c.ic+'"/></svg></span><div class="nm"><b>'+esc(c.name)+"</b>"+(c.tags.length?"<small>"+esc(c.tags.join(" · "))+"</small>":"")+'</div><button type="button" class="cp" data-i="'+i+'" aria-label="copy"><svg width="16" height="16"><use href="#i-copy"/></svg></button><button type="button" class="cp" data-q="'+i+'" aria-label="QR"><svg width="16" height="16"><use href="#i-qr"/></svg></button></div>'}).join("");
@@ -672,7 +698,10 @@ function render(){
 }
 
 /* ---------- ping: real round trip from this phone to the server ---------- */
-var PING={v:undefined,busy:false};
+var PING={v:undefined,busy:false},PH=[];
+function drawSpark(){var a=PH.length>1?PH:[PH[0],PH[0]],mn=Math.min.apply(null,a),mx=Math.max.apply(null,a),r=Math.max(1,mx-mn),pt=a.map(function(v,i){return(i/(a.length-1)*100).toFixed(1)+","+(23-(v-mn)/r*20).toFixed(1)}),ln="M"+pt.join(" L");
+ $("spark").innerHTML='<defs><linearGradient id="sg" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#60a5fa" stop-opacity=".45"/><stop offset="1" stop-color="#60a5fa" stop-opacity="0"/></linearGradient></defs><path d="'+ln+' V26 H0Z" fill="url(#sg)"/><path d="'+ln+'" fill="none" stroke="#60a5fa" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke"/>'}
+function tick(){var e=$("cd");if(!expire){e.textContent="";return}var r=Math.max(0,Math.floor(expire-Date.now()/1000)),z=function(n){return(n<10?"0":"")+n};e.textContent=Math.floor(r/86400)+"d "+z(Math.floor(r%86400/3600))+":"+z(Math.floor(r%3600/60))+":"+z(r%60)}
 function paintPing(){var v=PING.v,l=L(),o=$("onl");
  if(v===null){$("pms").innerHTML="--<small>ms</small>";$("pq").textContent=l.noResp;$("pq").style.color="var(--bad)";o.className="o dn";$("onlT").textContent=l.offline;return}
  var g=v<150?0:v<250?1:v<400?2:v<700?3:4,col=["var(--ok)","#84cc16","var(--warn)","#f97316","var(--bad)"][g];
@@ -682,7 +711,7 @@ function paintPing(){var v=PING.v,l=L(),o=$("onl");
 function one(){var t=performance.now(),ctl=window.AbortController?new AbortController():null,tm=setTimeout(function(){ctl&&ctl.abort()},4000);
  return fetch(location.origin+"/healthz?t="+Math.random(),{cache:"no-store",signal:ctl?ctl.signal:undefined}).then(function(r){clearTimeout(tm);if(!r.ok)throw 0;return performance.now()-t},function(e){clearTimeout(tm);throw e})}
 function runPing(){if(PING.busy)return;PING.busy=true;$("pingB").classList.add("spin");$("pms").innerHTML="--<small>ms</small>";$("pq").style.color="";$("pq").textContent=L().testing;
- var res=[],n=0;var fin=function(){PING.busy=false;$("pingB").classList.remove("spin");PING.v=res.length?Math.round(Math.min.apply(null,res)):null;paintPing()};
+ var res=[],n=0;var fin=function(){PING.busy=false;$("pingB").classList.remove("spin");PING.v=res.length?Math.round(Math.min.apply(null,res)):null;if(PING.v!==null){PH.push(PING.v);if(PH.length>14)PH.shift();drawSpark()}paintPing()};
  var step=function(){if(n++>=3)return fin();one().then(function(ms){res.push(ms)},function(){}).then(step)};
  one().then(function(){},function(){}).then(step)}
 
@@ -720,7 +749,7 @@ document.addEventListener("keydown",function(e){if(e.key==="Escape")closeSheet()
 $("uname").textContent="@"+String(D.username||"user");$("sub").textContent=sub;
 applyTheme(document.documentElement.getAttribute("data-theme")==="light"?"light":"dark");
 try{render()}catch(e){}
-setTimeout(ring,250);setTimeout(runPing,450);
+setTimeout(ring,250);setTimeout(runPing,450);tick();setInterval(tick,1000);setInterval(function(){if(!document.hidden)runPing()},20000);document.title="@"+String(D.username||"user")+" · "+(unl?"∞":Math.round(pct)+"%");
 })();
 </script>
 <script>document.addEventListener("pointermove",function(e){var c=e.target.closest&&e.target.closest(".card");if(c){var r=c.getBoundingClientRect();c.style.setProperty("--mx",(e.clientX-r.left)+"px");c.style.setProperty("--my",(e.clientY-r.top)+"px")}},{passive:true});</script>
@@ -752,6 +781,7 @@ for(var i=0;i<N;i++)P.push({x:Math.random()*W,y:Math.random()*H,vx:(Math.random(
  requestAnimationFrame(f)})();
 })();
 </script>
+<script>if(matchMedia("(hover:hover)").matches&&!matchMedia("(prefers-reduced-motion: reduce)").matches){var cu=document.createElement("div");cu.className="cur";document.body.appendChild(cu);document.addEventListener("pointermove",function(e){cu.style.transform="translate3d("+e.clientX+"px,"+e.clientY+"px,0)"},{passive:true})}</script>
 {% endraw %}
 </body>
 </html>

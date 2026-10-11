@@ -1,6 +1,8 @@
 # Changelog
 
 ## v6.1.4
+- New optional config 🌐 CDN FASTLY (VLESS + WebSocket on port 10006, path /fastly/): created automatically. Its address, SNI, Host and name are edited inside the panel (Hosts) and are never overwritten. Existing panels keep their paths, only the new one is generated
+- New optional CLEAN_IPS variable: clean Cloudflare IPs as the config address. Without it, an address typed in the panel (Hosts) is kept on every boot; hosts still on the panel domain keep following it
 - Default names changed: configs Apex, Pulse, Blaze, Prism, Lunar; groups Apex Pro and Orbit; title after each config name is Vortex (CONFIG_TITLE). Groups with the older names are renamed in place, so users keep their group
 - New subscription page in the PasarGuard dashboard style: dark and light theme, status card with usage ring, expiry, ping and config count, config list with protocol badges, copy and QR buttons
 - Telegram channel and support (PV) cards, footer credit changed

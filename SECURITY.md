@@ -1,7 +1,7 @@
 # Security
 
 - The first login is `admin / admin`. Change it right away in Settings > Change password. Lost access? Take the OWNER KEY from the Railway logs (or API Keys > owner key) and use "Owner access" on the login page. A password you set is never reset automatically.
-- The panel, the Xray core and all internal ports (8000, 8100, 10001-10005, 62050) listen on `127.0.0.1` only. The only public entry is nginx on port 8080 behind Railway's TLS.
+- The panel, the Xray core and all internal ports (8000, 8100, 10001-10006, 62050) listen on `127.0.0.1` only. The only public entry is nginx on port 8080 behind Railway's TLS.
 - Every install generates its own random config paths on first boot (stored on the volume), so forks never share paths.
 - The demo reseller `reseller / reseller` is created once. Change its password or delete it; it is never re-created. Set `DEMO_RESELLER=off` to skip it.
 - The "Admins" menu is visible to the owner only.

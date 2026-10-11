@@ -8,7 +8,8 @@ OUT_JSON = f"{DATA}/paths.json"
 OUT_INC = f"{DATA}/inbounds.inc"
 # tag -> (local port, path prefix)
 SLOTS = {"JX-VLESS-WS-1": (10001, "/ws/"), "JX-VLESS-WS-2": (10002, "/stream/"),
-         "JX-TROJAN-WS": (10003, "/live/"), "JX-VMESS-WS": (10004, "/gw/"), "JX-VLESS-HU": (10005, "/cdn/")}
+         "JX-TROJAN-WS": (10003, "/live/"), "JX-VMESS-WS": (10004, "/gw/"), "JX-VLESS-HU": (10005, "/cdn/"),
+         "JX-VLESS-CDN": (10006, "/fastly/")}
 # paths used by v6.0 and older: kept for panels that were already running before this version
 LEGACY = {"JX-VLESS-WS-1": "/ws/7a5a21d9-60f9-4542-943e-7838b90169e1",
           "JX-VLESS-WS-2": "/stream/4868e537-9fd8-46e9-b63a-f36459d18a81",
@@ -19,7 +20,7 @@ LEGACY = {"JX-VLESS-WS-1": "/ws/7a5a21d9-60f9-4542-943e-7838b90169e1",
 def load():
     try:
         with open(OUT_JSON) as f: p = json.load(f)
-        if all(isinstance(p.get(t), str) and p[t].startswith("/") for t in SLOTS): return p
+        if isinstance(p, dict) and any(isinstance(v, str) and v.startswith("/") for v in p.values()): return p
     except Exception: pass
     return None
 
@@ -35,6 +36,12 @@ def main():
         tmp = OUT_JSON + ".tmp"
         with open(tmp, "w") as f: json.dump(p, f, indent=1)
         os.replace(tmp, OUT_JSON)
+    miss = [t for t in SLOTS if not (isinstance(p.get(t), str) and p[t].startswith("/"))]
+    if miss:  # slots added by newer versions get a fresh unique path; the existing ones are never touched
+        for t in miss: p[t] = SLOTS[t][1] + str(uuid.UUID(bytes=secrets.token_bytes(16), version=4))
+        tmp = OUT_JSON + ".tmp"
+        with open(tmp, "w") as f: json.dump(p, f, indent=1)
+        os.replace(tmp, OUT_JSON); print("[paths] added new config paths:", ", ".join(miss))
     lines = [f"location = {p[t]} {{ proxy_pass http://127.0.0.1:{port}; include /etc/nginx/ws.inc; }}"
              for t, (port, _) in SLOTS.items()]
     with open(OUT_INC, "w") as f: f.write("\n".join(lines) + "\n")
